@@ -1,13 +1,30 @@
+import { observer } from "mobx-react-lite";
+import { useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
 import { Button, Card, Image } from "semantic-ui-react";
-import { Activity } from "../../../app/models/activity";
+import LoadingComponent from "../../../app/layout/LoadingComponent";
+import { useStore } from "../../../app/stores/store";
 
-interface Props {
-  activity: Activity;
-  cancelActivity: () => void;
-  openForm: (id: string) => void;
-}
+const ActivityDetails = () => {
+  const { id } = useParams<{ id: string }>();
 
-const ActivityDetails = ({ activity, cancelActivity, openForm }: Props) => {
+  const { activityStore } = useStore();
+  const {
+    selectedActivity: activity,
+    loadActivity,
+    loadingInitial,
+  } = activityStore;
+
+  useEffect(() => {
+    if (id) {
+      loadActivity(id);
+    }
+  }, [id, loadActivity]);
+
+  if (loadingInitial || !activity) {
+    return <LoadingComponent />;
+  }
+
   return (
     <Card fluid>
       <Image
@@ -24,16 +41,26 @@ const ActivityDetails = ({ activity, cancelActivity, openForm }: Props) => {
       </Card.Content>
       <Card.Content extra>
         {/* <Button.Group> */}
-          <Button floated="left"
-            color="blue"
-            content="Edit"
-            onClick={() => openForm(activity.id)}
-          />
-          <Button floated="right" color="grey" content="Cancel" onClick={cancelActivity} />
+        <Button
+          floated="left"
+          color="blue"
+          content="Edit"
+          as={Link}
+          to={`/manage/${activity.id}`}
+          // onClick={() => activityStore.openFormHandler(activity.id)}
+        />
+        <Button
+          floated="right"
+          color="grey"
+          content="Cancel"
+          as={Link}
+          to="/activities"
+          // onClick={activityStore.activityCancelHandler}
+        />
         {/* </Button.Group> */}
       </Card.Content>
     </Card>
   );
 };
 
-export default ActivityDetails;
+export default observer(ActivityDetails);
