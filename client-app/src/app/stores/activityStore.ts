@@ -2,9 +2,9 @@ import { makeAutoObservable, runInAction } from "mobx";
 import agent from "../api/agent";
 import { Activity } from "../models/activity";
 import { v4 as uuid } from "uuid";
+import { textChangeRangeIsUnchanged } from "typescript";
 
 class ActivityStore {
-  //   activities: Activity[] = [];
   activityRegistry = new Map<string, Activity>();
 
   selectedActivity: Activity | undefined = undefined;
@@ -22,14 +22,24 @@ class ActivityStore {
     );
   }
 
+  get groupedActivities() {
+    return Object.entries(
+      this.activitiesByDate.reduce((activities, activity) => {
+        const date = activity.date;
+        activities[date] = activities[date]
+          ? [...activities[date], activity]
+          : [activity];
+        return activities;
+      }, {} as { [key: string]: Activity[] })
+    );
+  }
+
   loadActivities = async () => {
     this.setLoadingInitial(true);
 
     try {
       const response = await agent.Activities.list();
       response.forEach((element) => {
-        // element.date = element.date.split("T")[0];
-        // this.activityRegistry.set(element.id, element);
         this.setActivity(element);
       });
       this.setLoadingInitial(false);
@@ -73,25 +83,6 @@ class ActivityStore {
     this.loadingInitial = state;
   };
 
-  //disable because of using Router
-
-  //   activitySelectHandler = (id: string) => {
-  //     this.selectedActivity = this.activityRegistry.get(id);
-  //   };
-
-  //   activityCancelHandler = () => {
-  //     this.selectedActivity = undefined;
-  //   };
-
-  //   openFormHandler = (id?: string) => {
-  //     id ? this.activitySelectHandler(id) : this.activityCancelHandler();
-  //     this.editMode = true;
-  //   };
-
-  //   closeFormHandler = () => {
-  //     this.editMode = false;
-  //   };
-
   editOrCreateHandler = async (activity: Activity) => {
     this.loading = true;
 
@@ -99,10 +90,6 @@ class ActivityStore {
       try {
         await agent.Activities.update(activity);
         runInAction(() => {
-          //   this.activities = [
-          //     ...this.activities.filter((x) => x.id !== activity.id),
-          //     activity,
-          //   ];
           this.activityRegistry.set(activity.id, activity);
           this.editMode = false;
           this.selectedActivity = activity;
@@ -118,9 +105,7 @@ class ActivityStore {
       activity.id = uuid();
       try {
         await agent.Activities.create(activity);
-
         runInAction(() => {
-          //   this.activities = [...this.activities, activity];
           this.activityRegistry.set(activity.id, activity);
           this.editMode = false;
           this.selectedActivity = activity;
@@ -145,7 +130,6 @@ class ActivityStore {
 
       await agent.Activities.delete(id);
       runInAction(() => {
-        // this.activities = [...this.activities.filter((x) => x.id !== id)];
         this.activityRegistry.delete(id);
         this.loading = false;
       });

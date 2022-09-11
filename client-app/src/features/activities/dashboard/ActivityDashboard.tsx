@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Grid } from "semantic-ui-react";
 import LoadingComponent from "../../../app/layout/LoadingComponent";
 import { useStore } from "../../../app/stores/store";
+import ActivityFilters from "./ActivityFilters";
 // import ActivityDetails from "../details/ActivityDetails";
 // import ActivityForm from "../form/ActivityForm";
 import ActivityList from "./ActivityList";
@@ -15,7 +16,11 @@ const ActivityDashboard = () => {
     if (activityStore.activityRegistry.size === 0) {
       activityStore.loadActivities();
     }
-  }, [activityStore.activityRegistry.size, activityStore.loadActivities]);
+  }, [
+    activityStore.activityRegistry.size,
+    activityStore.loadActivities,
+    activityStore,
+  ]);
 
   if (activityStore.loadingInitial) {
     return <LoadingComponent content="Loading...."></LoadingComponent>;
@@ -33,7 +38,8 @@ const ActivityDashboard = () => {
           <ActivityForm
           ></ActivityForm>
         )} */}
-        <h2>Activity Filters</h2>
+        {/* <h2>Activity Filters</h2> */}
+        <ActivityFilters/>
       </Grid.Column>
     </Grid>
   );
