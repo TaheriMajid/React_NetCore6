@@ -1,7 +1,8 @@
+import { observer } from "mobx-react-lite";
 import { Link } from "react-router-dom";
-import { Segment, Label, Item, Header, Button, Image } from "semantic-ui-react";
+import { Segment, Item, Header, Button, Image } from "semantic-ui-react";
 import { Activity } from "../../../app/models/activity";
-import { useStore } from "../../../app/stores/store";
+import { format } from "date-fns";
 
 const activityImageStyle = {
   filter: "brightness(30%)",
@@ -18,10 +19,12 @@ const activityImageTextStyle = {
 interface Props {
   activity: Activity;
 }
+
 const ActivityDetailedHeader = ({ activity }: Props) => {
-  const {
-    activityStore: { loading },
-  } = useStore();
+  const cancelClickHandler = () => {
+    console.log("cancel button clicked");
+  };
+
   return (
     <Segment.Group>
       <Segment basic attached="top" style={{ padding: "0" }}>
@@ -39,18 +42,26 @@ const ActivityDetailedHeader = ({ activity }: Props) => {
                   content={activity.title}
                   style={{ color: "white" }}
                 />
-                <p>{activity.date}</p>
-                <p>
-                  Hosted by Majid
-                </p>
+                <p>{format(activity.date!, "dd MMM yyyy hh:mm aa")}</p>
+                <p>Hosted by Majid</p>
               </Item.Content>
             </Item>
           </Item.Group>
         </Segment>
       </Segment>
       <Segment clearing attached="bottom">
+        <Button color="teal">Join Activity</Button>
+        <Button onClick={cancelClickHandler}>Cancel Attendance</Button>
+        <Button
+          as={Link}
+          to={`/manage/${activity.id}`}
+          color="orange"
+          floated="right"
+        >
+          Manage Event
+        </Button>
       </Segment>
     </Segment.Group>
   );
 };
-export default ActivityDetailedHeader;
+export default observer(ActivityDetailedHeader);

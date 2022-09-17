@@ -3,6 +3,7 @@ import agent from "../api/agent";
 import { Activity } from "../models/activity";
 import { v4 as uuid } from "uuid";
 import { textChangeRangeIsUnchanged } from "typescript";
+import { format } from "date-fns";
 
 class ActivityStore {
   activityRegistry = new Map<string, Activity>();
@@ -18,14 +19,16 @@ class ActivityStore {
 
   get activitiesByDate() {
     return Array.from(this.activityRegistry.values()).sort(
-      (a, b) => Date.parse(a.date) - Date.parse(b.date)
+      // (a, b) => Date.parse(a.date) - Date.parse(b.date)
+      (a, b) => a.date!.getTime() - b.date!.getTime()
     );
   }
 
   get groupedActivities() {
     return Object.entries(
       this.activitiesByDate.reduce((activities, activity) => {
-        const date = activity.date;
+        // const date = activity.date!.toISOString().split("T")[0];
+        const date = format(activity.date!, "dd MMM yyyy");
         activities[date] = activities[date]
           ? [...activities[date], activity]
           : [activity];
@@ -75,7 +78,8 @@ class ActivityStore {
   };
 
   private setActivity = (activitiy: Activity) => {
-    activitiy.date = activitiy.date.split("T")[0];
+    // activitiy.date = activitiy.date.split("T")[0];
+    activitiy.date = new Date(activitiy.date!);
     this.activityRegistry.set(activitiy.id, activitiy);
   };
 

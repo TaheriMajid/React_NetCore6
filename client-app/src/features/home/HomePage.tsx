@@ -1,5 +1,4 @@
 import { observer } from "mobx-react-lite";
-import React from "react";
 import { Link } from "react-router-dom";
 import {
   Container,
@@ -7,9 +6,7 @@ import {
   Segment,
   Image,
   Button,
-  Divider,
 } from "semantic-ui-react";
-import { useStore } from "../../app/stores/store";
 
 export default observer(function HomePage() {
   return (

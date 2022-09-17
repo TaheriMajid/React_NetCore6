@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
-import { Button, Icon, Item, Label, Segment } from "semantic-ui-react";
+import { Link } from "react-router-dom";
+import { Button, Icon, Item, Segment } from "semantic-ui-react";
 import { Activity } from "../../../app/models/activity";
-// import activityStore from "../../../app/stores/activityStore";
 import { useStore } from "../../../app/stores/store";
+import { format } from "date-fns";
 
 interface Props {
   activity: Activity;
@@ -40,7 +40,7 @@ const ActivityListItem = ({ activity }: Props) => {
       <Segment>
         <span>
           <Icon name="clock" />
-          {activity.date}
+          {format(activity.date!, "dd MMM yyyy hh:mm aa")}
           <Icon name="marker" />
           {activity.venue}
         </span>
@@ -48,42 +48,15 @@ const ActivityListItem = ({ activity }: Props) => {
       <Segment secondary>Attendees Go Here</Segment>
       <Segment clearing>
         <span>{activity.description}</span>
-        <Button as={Link} to={`/activities/${activity.id}`} color="blue" floated="right" content="View"/>
+        <Button
+          as={Link}
+          to={`/activities/${activity.id}`}
+          color="blue"
+          floated="right"
+          content="View"
+        />
       </Segment>
     </Segment.Group>
-    // <Item key={activity.id}>
-    //   <Item.Content>
-    //     <Item.Header as="a">{activity.title}</Item.Header>
-    //     <Item.Meta>{activity.date}</Item.Meta>
-    //     <Item.Description>
-    //       <div>{activity.description}</div>
-    //       <div>
-    //         {activity.city} , {activity.venue}
-    //       </div>
-    //     </Item.Description>
-    //     <Item.Extra>
-    //       <Button
-    //         floated="right"
-    //         content="View"
-    //         color="blue"
-    //         as={Link}
-    //         to={`/activities/${activity.id}`}
-    //         // onClick={() =>
-    //         //   activityStore.activitySelectHandler(activity.id)
-    //         // }
-    //       />
-    //       <Button
-    //         name={activity.id}
-    //         loading={activityStore.loading && target === activity.id}
-    //         floated="right"
-    //         content="Delete"
-    //         color="red"
-    //         onClick={(event) => deleteHandler(event, activity.id)}
-    //       />
-    //       <Label basic content={activity.category} />
-    //     </Item.Extra>
-    //   </Item.Content>
-    // </Item>
   );
 };
 

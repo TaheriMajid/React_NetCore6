@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { Link } from "react-router-dom";
-import { Segment, Header, Form, Loader, Comment } from "semantic-ui-react";
+import { Segment, Header, Comment } from "semantic-ui-react";
 
 interface Props {
   activityId: string;
