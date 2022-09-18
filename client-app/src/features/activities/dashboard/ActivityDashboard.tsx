@@ -23,7 +23,7 @@ const ActivityDashboard = () => {
   ]);
 
   if (activityStore.loadingInitial) {
-    return <LoadingComponent content="Loading...."></LoadingComponent>;
+    return <LoadingComponent content="Loading Activities...."></LoadingComponent>;
   }
   return (
     <Grid>
