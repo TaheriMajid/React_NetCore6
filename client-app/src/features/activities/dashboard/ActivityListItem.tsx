@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button, Icon, Item, Label, Segment } from "semantic-ui-react";
 import { Activity } from "../../../app/models/activity";
@@ -29,13 +29,15 @@ const ActivityListItem = ({ activity }: Props) => {
         )}
         <Item.Group>
           <Item>
-            <Item.Image size="tiny" circular src="/assets/user.png" />
+            {/* <Item.Image size="tiny" circular src="/assets/user.png" /> */}
+            <Item.Image size="tiny" circular src={activity.host?.image || "/assets/user.png"} />
             <Item.Content>
               <Item.Header as={Link} to={`/activities/${activity.id}`}>
                 {activity.title}
               </Item.Header>
               <Item.Description>
-                Hosted by {activity.host?.displayName}
+                Hosted by{" "}
+                <Link to={`/profiles/${activity.hostUsername}`}>{activity.host?.displayName}</Link>
                 {activity.isHost && (
                   <Item.Description>
                     <Label basic color="orange">
@@ -64,7 +66,6 @@ const ActivityListItem = ({ activity }: Props) => {
         </span>
       </Segment>
       <Segment secondary>
-        {/* Attendees Go Here */}
         <ActivityListItemAttendee attendees={activity.attendees!} />
       </Segment>
       <Segment clearing>
