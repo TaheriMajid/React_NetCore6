@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Application.Activities;
+using Application.Comments;
 using AutoMapper;
 using Domain;
 
@@ -24,12 +25,18 @@ namespace Application.Core
             .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.AppUser.DisplayName))
             .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.AppUser.Bio))
             .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.AppUser.UserName))
-            .ForMember(dest => dest.Image, opt => 
+            .ForMember(dest => dest.Image, opt =>
                     opt.MapFrom(src => src.AppUser.Photos.FirstOrDefault(x => x.IsMain).Url));
 
             CreateMap<AppUser, Profiles.Profile>()
-            .ForMember(dest => dest.Image, opt => 
+            .ForMember(dest => dest.Image, opt =>
                     opt.MapFrom(src => src.Photos.FirstOrDefault(x => x.IsMain).Url));
+
+            CreateMap<Comment, CommentDto>()
+            .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Author.UserName))
+            .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.Author.DisplayName))
+            .ForMember(dest => dest.Image, opt =>
+                    opt.MapFrom(src => src.Author.Photos.FirstOrDefault(x => x.IsMain).Url));
         }
     }
 }
