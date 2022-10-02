@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Application.Core;
+using Application.Interfaces;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Domain;
@@ -21,20 +22,18 @@ namespace Application.Activities
         {
             private readonly DataContext _context;
             private readonly IMapper _mapper;
-            public Handler(DataContext context, IMapper mapper)
+            private readonly IUserAccessor _userAccessor;
+            public Handler(DataContext context, IMapper mapper, IUserAccessor userAccessor)
             {
+                this._userAccessor = userAccessor;
                 this._mapper = mapper;
                 this._context = context;
             }
             public async Task<Result<List<ActivityDto>>> Handle(Query request, CancellationToken cancellationToken)
             {
-                // var activities = await _context.Activities
-                //     .Include(a => a.Attendees).ThenInclude(u => u.AppUser).ToListAsync();
-
-                // var activitiesToReturn = _mapper.Map<List<ActivityDto>>(activities);
-
                 var activities = await _context.Activities
-                    .ProjectTo<ActivityDto>(_mapper.ConfigurationProvider).ToListAsync();
+                    .ProjectTo<ActivityDto>(_mapper.ConfigurationProvider, 
+                        new { currentUsername = _userAccessor.GetUserName() }).ToListAsync();
 
 
                 return Result<List<ActivityDto>>.Success(activities);
