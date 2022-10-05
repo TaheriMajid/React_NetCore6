@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction } from "mobx";
+import { makeAutoObservable, reaction, runInAction } from "mobx";
 import agent from "../api/agent";
 import { Activity, ActivityFormValues } from "../models/activity";
 import { v4 as uuid } from "uuid";
@@ -6,6 +6,7 @@ import { textChangeRangeIsUnchanged } from "typescript";
 import { format } from "date-fns";
 import { store } from "./store";
 import { Profile } from "../models/profile";
+import { Pagination, PagingParams } from "../models/pagination";
 
 class ActivityStore {
   activityRegistry = new Map<string, Activity>();
@@ -14,14 +15,70 @@ class ActivityStore {
   editMode = false;
   loading = false;
   loadingInitial = true;
+  pagination: Pagination | null = null;
+  pagingParams = new PagingParams();
+  predicate = new Map().set("all", true);
 
   constructor() {
     makeAutoObservable(this);
+
+    reaction(
+      () => this.predicate.keys(),
+      () => {
+        this.pagingParams = new PagingParams();
+        this.activityRegistry.clear();
+        this.loadActivities();
+      }
+    );
+  }
+
+  setPagingParams = (pagingParams: PagingParams) => {
+    this.pagingParams = pagingParams;
+  };
+
+  setPredicate = (predicate: string, value: string | Date) => {
+    const resetPredicate = () => {
+      this.predicate.forEach((value, key) => {
+        if (key != "startDate") this.predicate.delete(key);
+      });
+    };
+
+    switch (predicate) {
+      case "all":
+        resetPredicate();
+        this.predicate.set("all", true);
+        break;
+      case "isGoing":
+        resetPredicate();
+        this.predicate.set("isGoing", true);
+        break;
+      case "isHost":
+        resetPredicate();
+        this.predicate.set("isHost", true);
+        break;
+      case "startDate":
+        this.predicate.delete("startDate");
+        this.predicate.set("startDate", value);
+        break;
+    }
+  };
+
+  get axiosParams() {
+    const params = new URLSearchParams();
+    params.append("pageNumber", this.pagingParams.pageNumber.toString());
+    params.append("pageSize", this.pagingParams.pageSize.toString());
+    this.predicate.forEach((value, key) => {
+      if (key === "startDate") {
+        params.append(key, (value as Date).toISOString());
+      } else {
+        params.append(key, value);
+      }
+    });
+    return params;
   }
 
   get activitiesByDate() {
     return Array.from(this.activityRegistry.values()).sort(
-      // (a, b) => Date.parse(a.date) - Date.parse(b.date)
       (a, b) => a.date!.getTime() - b.date!.getTime()
     );
   }
@@ -29,7 +86,6 @@ class ActivityStore {
   get groupedActivities() {
     return Object.entries(
       this.activitiesByDate.reduce((activities, activity) => {
-        // const date = activity.date!.toISOString().split("T")[0];
         const date = format(activity.date!, "dd MMM yyyy");
         activities[date] = activities[date] ? [...activities[date], activity] : [activity];
         return activities;
@@ -41,15 +97,21 @@ class ActivityStore {
     this.setLoadingInitial(true);
 
     try {
-      const response = await agent.Activities.list();
-      response.forEach((element) => {
+      const response = await agent.Activities.list(this.axiosParams);
+      // response.forEach((element) => {
+      response.data.forEach((element) => {
         this.setActivity(element);
       });
+      this.setPagination(response.pagination);
       this.setLoadingInitial(false);
     } catch (error) {
       this.setLoadingInitial(false);
       console.log(error);
     }
+  };
+
+  setPagination = (pagination: Pagination) => {
+    this.pagination = pagination;
   };
 
   loadActivity = async (id: string) => {
@@ -126,16 +188,10 @@ class ActivityStore {
         newActivity.attendees = [attendee];
         this.setActivity(newActivity);
         runInAction(() => {
-          // this.activityRegistry.set(activity.id, activity);
-          // this.editMode = false;
-          // this.selectedActivity = activity;
-          // this.loading = false;
           this.selectedActivity = newActivity;
         });
       } catch (error) {
-        runInAction(() => {
-          // this.loading = false;
-        });
+        runInAction(() => {});
         console.log(error);
       }
     }

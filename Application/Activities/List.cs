@@ -15,10 +15,13 @@ namespace Application.Activities
 {
     public class List
     {
-        // public class Query : IRequest<Result<List<Activity>>> { }
-        public class Query : IRequest<Result<List<ActivityDto>>> { }
+        public class Query : IRequest<Result<PagedList<ActivityDto>>>
+        {
+            // public PagingParams Params { get; set; }
+            public ActivityParams Params { get; set; }
+        }
 
-        public class Handler : IRequestHandler<Query, Result<List<ActivityDto>>>
+        public class Handler : IRequestHandler<Query, Result<PagedList<ActivityDto>>>
         {
             private readonly DataContext _context;
             private readonly IMapper _mapper;
@@ -29,14 +32,28 @@ namespace Application.Activities
                 this._mapper = mapper;
                 this._context = context;
             }
-            public async Task<Result<List<ActivityDto>>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<Result<PagedList<ActivityDto>>> Handle(Query request, CancellationToken cancellationToken)
             {
-                var activities = await _context.Activities
-                    .ProjectTo<ActivityDto>(_mapper.ConfigurationProvider, 
-                        new { currentUsername = _userAccessor.GetUserName() }).ToListAsync();
+                var query = _context.Activities?
+                    .Where(it => it.Date >= request.Params.StartDate)
+                    .OrderBy(it => it.Date)
+                    .ProjectTo<ActivityDto>(_mapper.ConfigurationProvider,
+                        new { currentUsername = _userAccessor.GetUserName() }).AsQueryable();
 
+                if (request.Params.IsGoing && !request.Params.IsHost)
+                {
+                    query = query.Where(it => it.Attendees.Any(a => a.Username == _userAccessor.GetUserName()));
+                }
 
-                return Result<List<ActivityDto>>.Success(activities);
+                if (request.Params.IsHost && !request.Params.IsGoing)
+                {
+                    query = query.Where(it => it.HostUsername == _userAccessor.GetUserName());
+                }
+
+                return Result<PagedList<ActivityDto>>.Success(
+                    await PagedList<ActivityDto>
+                        .CreateAsync(query, request.Params.PageNumber, request.Params.PageSize)
+                );
             }
         }
     }
